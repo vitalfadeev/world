@@ -163,7 +163,7 @@ World {
     }
 
     struct
-    BaseEvent {
+    InputEvent {
         Type type;
 
         enum 
@@ -179,13 +179,27 @@ World {
     }
 
     struct
+    AppEvent {
+        Type type;
+
+        enum 
+        Type {
+            _,
+        }
+
+        bool
+        opCast (T) () if (is (T == bool)) {
+            return (type != 0);
+        }
+    }
+
+    struct
     Event {
-        BaseEvent  base;
+        InputEvent input;
+        AppEvent   app;
         Grid.Event grid;
-        alias input = base;
 
         bool is_gridable;
-        auto gridable () { return grid; }
 
         bool
         opCast (T) () if (is (T == bool)) {
@@ -310,8 +324,8 @@ Widget {
     void
     see (Visitor* visitor) {
         if (visitor.event.is_gridable)
-        if (grid.match (visitor.event.gridable.loc,  min_loc, max_loc))
-        if (visitor.event.input.type == World.BaseEvent.Type.POINTER) {
+        if (grid.match (visitor.event.grid.loc,  min_loc, max_loc))
+        if (visitor.event.input.type == World.InputEvent.Type.POINTER) {
             // poiner over widget
         }
     }
