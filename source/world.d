@@ -66,7 +66,7 @@ World {
         return widget;
     }
 
-    void
+    auto
     see (World_Able_Event* event) {
         // сначала верхнй мир
         // затем нижний мир
@@ -78,6 +78,8 @@ World {
             writeln ("  ", *widget);
             widget.see (&visitor);
         }
+
+        return World_Able_Event ();
     }
 
     void
@@ -352,6 +354,12 @@ struct
 World_Able_Event {
     GridEvent _super;
     alias _super this;
+
+    bool
+    opCast (T) () if (is (T == bool)) {
+        //return (type != 0);
+        return false;
+    }
 }
 
 struct 
