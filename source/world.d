@@ -1,3 +1,4 @@
+import std.stdio : writeln;
 
 
 void
@@ -71,8 +72,11 @@ World {
         //   для решения "widget поверх мир"
         auto visitor = Visitor (event,&this);
 
-        foreach (widget; widgets.walk)
+        writeln (*event);
+        foreach (widget; widgets.walk) {
+            writeln ("  ", *widget);
             widget.see (&visitor);
+        }
     }
 
     void
@@ -264,7 +268,7 @@ DListAble (T) {
     struct
     Walker {
         T*   front;
-        bool empty () { return (front is null); }
+        bool empty    () { return (front is null); }
         void popFront () { front = front.r; }
     }
 }
@@ -283,9 +287,12 @@ WalkAble (T) {
 
     struct
     Walker {
-        T*   front;
-        bool empty () { return (front is null); }
-        void popFront () { for (front=front.r; front !is null; front = front.r) if (!front.walk_able) continue;  }
+        T*    front;
+              this      (T* front) { this.front = front; if (!empty && !_able) _find_able (); }
+        bool  empty     () { return (front is null); }
+        void  popFront  () { _find_able (); }
+        void _find_able () { do front = front.r; while (!empty && !_able); }
+        bool _able      () { return front.walk_able; }
     }
 }
 
