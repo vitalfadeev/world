@@ -23,15 +23,13 @@ go () {
     auto e  = world.widget (c3, Len (1,1));
 
     // loop
-    foreach (event; events) {
-        auto grid_event_loc = event.loc.to!(Grid.Loc);
+    foreach (event; events)
         world.see (&event);
-    }
 }
 
 auto
 events () {
-    return [World_Able_Event ()];
+    return [World.Event ()];
 }
 
 struct
@@ -67,7 +65,7 @@ World {
     }
 
     auto
-    see (World_Able_Event* event) {
+    see (World.Event* event) {
         // Grid able
         //   сетка матчит по сеточным координатам
         //     сеточные координаты лежат в event, туда попадают из конвертора
@@ -96,7 +94,7 @@ World {
             widget.see (&visitor);
         }
 
-        return World_Able_Event ();
+        return World.Event ();
     }
 
     void
@@ -161,6 +159,37 @@ World {
             auto windowed_max_x = max_loc.x * window_len.x / L.max;
             auto windowed_max_y = max_loc.y * window_len.y / L.max;
             }
+        }
+    }
+
+    struct
+    BaseEvent {
+        Type type;
+
+        enum 
+        Type {
+            _,
+            POINTER,
+        }
+
+        bool
+        opCast (T) () if (is (T == bool)) {
+            return (type != 0);
+        }
+    }
+
+    struct
+    Event {
+        BaseEvent  base;
+        Grid.Event grid;
+        alias input = base;
+
+        bool is_gridable;
+        auto gridable () { return grid; }
+
+        bool
+        opCast (T) () if (is (T == bool)) {
+            return base;
         }
     }
 }
@@ -282,7 +311,7 @@ Widget {
     see (Visitor* visitor) {
         if (visitor.event.is_gridable)
         if (grid.match (visitor.event.gridable.loc,  min_loc, max_loc))
-        if (visitor.event.type == GridEvent.Type.POINTER) {
+        if (visitor.event.input.type == World.BaseEvent.Type.POINTER) {
             // poiner over widget
         }
     }
@@ -326,7 +355,7 @@ WalkAble (T) {
         bool  empty     () { return (front is null); }
         void  popFront  () { _find_able (); }
         void _find_able () { do front = front.r; while (!empty && !_able); }
-        bool _able      () { return front.walk.able; }
+        bool _able      () { return front.able; }
     }
 }
 
@@ -381,39 +410,9 @@ Widgets {  // DList
 struct
 Visitor {
     // Event
-    World_Able_Event* event;
+    World.Event* event;
     // 
     World*     current_world;
-}
-
-struct
-World_Able_Event {
-    GridEvent _super;
-    alias _super this;
-
-    bool is_gridable;
-    auto gridable () { return _super; }
-
-    bool
-    opCast (T) () if (is (T == bool)) {
-        //return (type != 0);
-        return false;
-    }
-}
-
-struct 
-GridEvent {
-    Type type;
-    Loc  loc;
-    union {
-        PointerEvent pointer;
-    }
-
-    enum
-    Type {
-        _,
-        POINTER,
-    }
 }
 
 struct 
@@ -431,6 +430,11 @@ Grid {  // SIMD
     auto
     between (Loc loc, Loc min_loc, Loc max_loc) {
         return false;
+    }
+
+    struct 
+    Event {
+        Loc loc;
     }
 }
 
