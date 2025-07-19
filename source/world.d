@@ -68,9 +68,26 @@ World {
 
     auto
     see (World_Able_Event* event) {
-        // сначала верхнй мир
-        // затем нижний мир
-        //   для решения "widget поверх мир"
+        // Grid able
+        //   сетка матчит по сеточным координатам
+        //     сеточные координаты лежат в event, туда попадают из конвертора
+        //   pointer events
+        //     motion
+        //     button
+        // Hot key
+        //   key events
+        // World events
+
+        // key
+        //   -> focused
+        // pointer
+        //   -> widgets
+
+
+        // Grid able
+        //   сначала верхнй мир
+        //   затем нижний мир
+        //     для решения "widget поверх мир"
         auto visitor = Visitor (event,&this);
 
         writeln (*event);
@@ -150,6 +167,12 @@ World {
 
 struct
 Container {
+    mixin ListAble!(typeof(this)) list;
+    mixin WalkAble!(typeof(this)) walk;
+    mixin GridAble!(typeof(this)) grid;
+    mixin ContAble!(typeof(this)) cont;
+
+    version (NEVER) {
     // Containers DList
     Container* l;
     Container* r;
@@ -161,6 +184,7 @@ Container {
     // Container
     Container* container;  // id контейнера = указатель
     Len        fix_len;    // fixed len, in gris-coord, 0 = auto
+    }
     // Container algo
     Way        way     = Way.r;
     Balance    balance = Balance.l;
@@ -210,7 +234,7 @@ Containers {  // DList
 
     auto
     walk () {
-        return DListAble!(Container).walk (this.l);
+        return l.walk.walk (this.l);
     }
 
     pragma (inline,true)
@@ -224,6 +248,12 @@ Containers {  // DList
 
 struct
 Widget {
+    mixin ListAble!(typeof(this)) list;
+    mixin WalkAble!(typeof(this)) walk;
+    mixin GridAble!(typeof(this)) grid;
+    mixin ContAble!(typeof(this)) cont;
+    
+    version (NEVER) {
     // DList
     Widget*    l;
     Widget*    r;
@@ -235,6 +265,7 @@ Widget {
     // Container           // Контейнерные кооринаты
     Container* container;  // id контейнера = указатель
     Len        fix_len;    // fixed len, in gris-coord, 0 = auto
+    }
 
     this (Loc min_loc, Loc max_loc) {
         this.min_loc = min_loc;
@@ -249,16 +280,16 @@ Widget {
     //
     void
     see (Visitor* visitor) {
+        if (visitor.event.is_gridable)
+        if (grid.match (visitor.event.gridable.loc,  min_loc, max_loc))
         if (visitor.event.type == GridEvent.Type.POINTER) {
-            if (Grid.between (visitor.event.loc,  min_loc, max_loc)) {
-                // poiner over widget
-            }
+            // poiner over widget
         }
     }
 }
 
-template
-DListAble (T) {
+mixin template
+ListAble (T) {
     // Widgets DList
     T* l;
     T* r;
@@ -276,7 +307,7 @@ DListAble (T) {
     }
 }
 
-template
+mixin template
 WalkAble (T) {
     // DList-based
 
@@ -295,19 +326,24 @@ WalkAble (T) {
         bool  empty     () { return (front is null); }
         void  popFront  () { _find_able (); }
         void _find_able () { do front = front.r; while (!empty && !_able); }
-        bool _able      () { return front.walk_able; }
+        bool _able      () { return front.walk.able; }
     }
 }
 
-template
+mixin template
 GridAble (T) {
     // Grid                // Сеточные координаты
     Loc        min_loc;    // начало, включая границу
     Loc        max_loc;    // конец, включая границу    
+
+    bool
+    match (Loc loc, Loc min_loc, Loc max_loc) {
+        return Grid.between (loc, min_loc,max_loc);
+    }
 }
 
-template
-ContainerAble (T) {
+mixin template
+ContAble (T) {
     // Container           // Контейнерные кооринаты
     Container* container;  // id контейнера = указатель
     Len        fix_len;    // fixed len, in gris-coord, 0 = auto    
@@ -338,7 +374,7 @@ Widgets {  // DList
 
     auto
     walk () {
-        return WalkAble!(Widget).walk (this.l);
+        return l.walk.walk (this.l);
     }
 }
 
@@ -354,6 +390,9 @@ struct
 World_Able_Event {
     GridEvent _super;
     alias _super this;
+
+    bool is_gridable;
+    auto gridable () { return _super; }
 
     bool
     opCast (T) () if (is (T == bool)) {
