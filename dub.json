@@ -1,0 +1,7 @@
+{
+	"name"        : "world",
+	"authors"     : ["vf"],
+	"copyright"   : "Copyright © 2025, vf",
+	"description" : "A minimal D application.",
+	"license"     : "proprietary",
+}
