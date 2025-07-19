@@ -1,4 +1,5 @@
 import std.stdio : writeln;
+import loc;
 
 
 void
@@ -30,7 +31,7 @@ go () {
 
 auto
 events () {
-    return [GridEvent ()];
+    return [World_Able_Event ()];
 }
 
 struct
@@ -66,7 +67,7 @@ World {
     }
 
     void
-    see (GridEvent* event) {
+    see (World_Able_Event* event) {
         // сначала верхнй мир
         // затем нижний мир
         //   для решения "widget поверх мир"
@@ -214,7 +215,7 @@ Containers {  // DList
     static
     void
     link (Container* a, Container* b) {
-        b.l = a.r;
+        b.l = a;
         a.r = b;
     }
 }
@@ -319,7 +320,7 @@ Widgets {  // DList
     static
     void
     link (Widget* a, Widget* b) {
-        b.l = a.r;
+        b.l = a;
         a.r = b;
     }
 
@@ -342,9 +343,15 @@ Widgets {  // DList
 struct
 Visitor {
     // Event
-    GridEvent* event;
+    World_Able_Event* event;
     // 
     World*     current_world;
+}
+
+struct
+World_Able_Event {
+    GridEvent _super;
+    alias _super this;
 }
 
 struct 
@@ -369,9 +376,9 @@ PointerEvent {
 
 struct
 Grid {  // SIMD
-    alias L   =  ubyte;
-    alias Loc = .TLoc!L;
-    alias Len = .TLen!L;
+    alias L   = ubyte;
+    alias Loc = TLoc!L;
+    alias Len = TLen!L;
 
     static
     auto
@@ -421,29 +428,6 @@ msb (int a) {
     return bsr (a);
 }
 
-
-struct
-TLen (L) {  // SIMD
-    L[2] xy;
-
-    this (int x, int y) {
-        xy[0] = x.to!L;
-        xy[1] = y.to!L;
-    }
-}
-
-struct
-TLoc (L) {  // SIMD
-    L[2] xy;
-
-    auto x () { return xy[0]; }
-    auto y () { return xy[1]; }
-
-    this (int x, int y) {
-        xy[0] = x.to!L;
-        xy[1] = y.to!L;
-    }
-}
 
 alias L   = Grid.L;
 alias Loc = Grid.Loc;

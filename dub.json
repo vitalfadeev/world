@@ -4,4 +4,7 @@
 	"copyright"   : "Copyright © 2025, vf",
 	"description" : "A minimal D application.",
 	"license"     : "proprietary",
+	"dependencies": {
+		"loc"        : {"path":"deps/loc"},
+	},			
 }
