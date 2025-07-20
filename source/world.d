@@ -275,6 +275,7 @@ Widget {
     mixin GridAble!(typeof(this)) grid;
     mixin ContAble!(typeof(this)) cont;
     //mixin EvntAble!(typeof(this)) evnt;
+    mixin CustAble!(typeof(this)) cust;
     
     version (NEVER) {
     // DList
@@ -371,11 +372,10 @@ ContAble (T) {
 }
 
 mixin template
-EvntAble (T) {
-    EVENT_CB event_cb;
+CustAble (T) {
+    // custom fields
+    void* callback;
 }
-//alias EVENT_CB = void delegate (World.Event* event);  // struct {void* _this; void* _cb;}
-alias EVENT_CB = void delegate (void* event);  // struct {void* _this; void* _cb;}
 
 struct
 Widgets {  // DList
