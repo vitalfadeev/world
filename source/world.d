@@ -1,37 +1,5 @@
 
 
-void
-go () {
-    // world
-    // on world grid
-    // on grid container
-    // in container widget
-
-    // init
-    auto world = World (Len (ubyte.max,ubyte.max));  // ubyte.max = 255
-
-    auto c1 = world.container (Container.Way.r, Container.Balance.l, Loc (0,0), Loc (L.max/3,1));
-    auto c2 = world.container (Container.Way.r, Container.Balance.c, Loc (L.max/3,0), Loc (L.max/3,1));
-    auto c3 = world.container (Container.Way.l, Container.Balance.r, Loc (L.max/3*2,0), Loc (L.max,1));
-
-    auto a  = world ~= new Widget (c1, Len (1,1));
-    auto b  = world ~= new Widget (c1, Len (1,1));
-    auto c  = world ~= new Widget (c2, Len (1,1));
-    auto d  = world ~= new Widget (c3, Len (1,1));
-    auto e  = world ~= new Widget (c3, Len (1,1));
-
-    auto
-    events () {
-        return [World.Event ()];
-    }
-
-    // loop
-    foreach (ref event; events)
-        foreach (_widget; world.widgets (Grid.Loc (0,0))) {
-            // _widget;
-        }
-}
-
 struct
 World {
     // Grid
@@ -155,21 +123,6 @@ World {
     opOpAssign (string op : "~") (Widget* b) {
         widgets ~= b;
         return b;
-    }
-
-    struct
-    Event {
-        Container* container;
-        Widget*    widget;
-        World*     world;
-
-        bool   is_gridable;
-        bool   is_containerable;
-        bool   is_widgetable;
-
-
-        // if (WidgetEvent) ...
-        //bool opCast (T) () if (is (T == bool)) { return (widget !is null); }
     }
 }
 
