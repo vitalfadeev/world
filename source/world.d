@@ -86,12 +86,20 @@ World {
         //   сначала верхнй мир
         //   затем нижний мир
         //     для решения "widget поверх мир"
-        auto visitor = Visitor (event,&this);
 
         writeln (*event);
+        if (event.is_widgetable)
+        if (event.is_gridable)
         foreach (widget; widgets.walk) {
-            writeln ("  ", *widget);
-            widget.see (&visitor);
+            if (widget.grid.match (event.grid.loc)) {
+                event.widget.widget = widget;
+            }
+
+            if (event.widget.widget)
+            if (event.input.type == World.InputEvent.Type.POINTER) {
+                // poiner over widget
+                writeln ("  poiner over widget: ", widget);
+            }
         }
 
         return World.Event ();
@@ -172,10 +180,8 @@ World {
             POINTER,
         }
 
-        bool
-        opCast (T) () if (is (T == bool)) {
-            return (type != 0);
-        }
+        // if (InputEvent) ...
+        bool opCast (T) () if (is (T == bool)) { return (type != 0); }
     }
 
     struct
@@ -187,19 +193,27 @@ World {
             _,
         }
 
-        bool
-        opCast (T) () if (is (T == bool)) {
-            return (type != 0);
-        }
+        // if (AppEvent) ...
+        bool opCast (T) () if (is (T == bool)) { return (type != 0); }
+    }
+
+    struct
+    WidgetEvent {
+        Widget* widget;
+
+        // if (WidgetEvent) ...
+        bool opCast (T) () if (is (T == bool)) { return (widget !is null); }
     }
 
     struct
     Event {
-        InputEvent input;
-        AppEvent   app;
-        Grid.Event grid;
+        InputEvent  input;
+        AppEvent    app;
+        Grid.Event  grid;
+        WidgetEvent widget;
 
         bool is_gridable;
+        bool is_widgetable;
 
         bool
         opCast (T) () if (is (T == bool)) {
@@ -295,7 +309,7 @@ Widget {
     mixin WalkAble!(typeof(this)) walk;
     mixin GridAble!(typeof(this)) grid;
     mixin ContAble!(typeof(this)) cont;
-    mixin EvntAble!(typeof(this)) evnt;
+    //mixin EvntAble!(typeof(this)) evnt;
     
     version (NEVER) {
     // DList
@@ -319,16 +333,6 @@ Widget {
     this (Container* container, Len fix_len) {
         this.container = container;
         this.fix_len   = fix_len;        
-    }
-
-    //
-    void
-    see (Visitor* visitor) {
-        if (visitor.event.is_gridable)
-        if (grid.match (visitor.event.grid.loc,  min_loc, max_loc))
-        if (visitor.event.input.type == World.InputEvent.Type.POINTER) {
-            // poiner over widget
-        }
     }
 }
 
@@ -381,7 +385,7 @@ GridAble (T) {
     Loc        max_loc;    // конец, включая границу    
 
     bool
-    match (Loc loc, Loc min_loc, Loc max_loc) {
+    match (Loc loc) {
         return Grid.between (loc, min_loc,max_loc);
     }
 }
@@ -397,7 +401,8 @@ mixin template
 EvntAble (T) {
     EVENT_CB event_cb;
 }
-alias EVENT_CB = void delegate (World.Event* event);  // struct {void* _this; void* _cb;}
+//alias EVENT_CB = void delegate (World.Event* event);  // struct {void* _this; void* _cb;}
+alias EVENT_CB = void delegate (void* event);  // struct {void* _this; void* _cb;}
 
 struct
 Widgets {  // DList
