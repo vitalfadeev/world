@@ -295,6 +295,7 @@ Widget {
     mixin WalkAble!(typeof(this)) walk;
     mixin GridAble!(typeof(this)) grid;
     mixin ContAble!(typeof(this)) cont;
+    mixin EvntAble!(typeof(this)) evnt;
     
     version (NEVER) {
     // DList
@@ -391,6 +392,12 @@ ContAble (T) {
     Container* container;  // id контейнера = указатель
     Len        fix_len;    // fixed len, in gris-coord, 0 = auto    
 }
+
+mixin template
+EvntAble (T) {
+    EVENT_CB event_cb;
+}
+alias EVENT_CB = void delegate (World.Event* event);  // struct {void* _this; void* _cb;}
 
 struct
 Widgets {  // DList
