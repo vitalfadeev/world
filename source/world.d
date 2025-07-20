@@ -94,12 +94,6 @@ World {
             if (widget.grid.match (event.grid.loc)) {
                 event.widget.widget = widget;
             }
-
-            if (event.widget.widget)
-            if (event.input.type == World.InputEvent.Type.POINTER) {
-                // poiner over widget
-                writeln ("  poiner over widget: ", widget);
-            }
         }
 
         return World.Event ();
@@ -171,54 +165,17 @@ World {
     }
 
     struct
-    InputEvent {
-        Type type;
-
-        enum 
-        Type {
-            _,
-            POINTER,
-        }
-
-        // if (InputEvent) ...
-        bool opCast (T) () if (is (T == bool)) { return (type != 0); }
-    }
-
-    struct
-    AppEvent {
-        Type type;
-
-        enum 
-        Type {
-            _,
-        }
-
-        // if (AppEvent) ...
-        bool opCast (T) () if (is (T == bool)) { return (type != 0); }
-    }
-
-    struct
-    WidgetEvent {
-        Widget* widget;
-
-        // if (WidgetEvent) ...
-        bool opCast (T) () if (is (T == bool)) { return (widget !is null); }
-    }
-
-    struct
     Event {
-        InputEvent  input;
-        AppEvent    app;
-        Grid.Event  grid;
-        WidgetEvent widget;
+        Grid.Event      grid;
+        Container.Event container;
+        Widget.Event    widget;
 
         bool is_gridable;
+        bool is_containerable;
         bool is_widgetable;
 
-        bool
-        opCast (T) () if (is (T == bool)) {
-            return base;
-        }
+        // if (WidgetEvent) ...
+        //bool opCast (T) () if (is (T == bool)) { return (widget !is null); }
     }
 }
 
@@ -265,6 +222,14 @@ Container {
         r,
         c,
         l,
+    }
+
+    struct
+    Event {
+        Container* container;
+
+        // if (WidgetEvent) ...
+        bool opCast (T) () if (is (T == bool)) { return (container !is null); }
     }
 }
 
@@ -333,6 +298,14 @@ Widget {
     this (Container* container, Len fix_len) {
         this.container = container;
         this.fix_len   = fix_len;        
+    }
+
+    struct
+    Event {
+        Widget* widget;
+
+        // if (WidgetEvent) ...
+        bool opCast (T) () if (is (T == bool)) { return (widget !is null); }
     }
 }
 
