@@ -1,5 +1,3 @@
-import std.stdio : writeln;
-import loc;
 
 
 void
@@ -87,7 +85,6 @@ World {
         //   затем нижний мир
         //     для решения "widget поверх мир"
 
-        writeln (*event);
         if (event.is_widgetable)
         if (event.is_gridable)
         foreach (widget; widgets.walk) {
@@ -354,6 +351,8 @@ WalkAble (T) {
 
 mixin template
 GridAble (T) {
+    import loc;
+    
     // Grid                // Сеточные координаты
     Loc        min_loc;    // начало, включая границу
     Loc        max_loc;    // конец, включая границу    
@@ -421,6 +420,7 @@ PointerEvent {
 
 struct
 Grid {  // SIMD
+    import loc;
     alias L   = ubyte;
     alias Loc = TLoc!L;
     alias Len = TLen!L;
@@ -435,22 +435,6 @@ Grid {  // SIMD
     Event {
         Loc loc;
     }
-}
-
-auto
-to (T,A) (A a) {
-    static if (is (T == Grid.Loc)) {
-        return _loc_to_grid_loc (a);
-    }
-    else {
-        import std.conv : std_conv_to = to;
-        return a.std_conv_to!T;
-    }
-}
-
-Grid.Loc
-_loc_to_grid_loc (Loc) (Loc loc) {
-    return Grid.Loc ();
 }
 
 
