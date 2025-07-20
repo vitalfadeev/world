@@ -14,20 +14,22 @@ go () {
     auto c2 = world.container (Container.Way.r, Container.Balance.c, Loc (L.max/3,0), Loc (L.max/3,1));
     auto c3 = world.container (Container.Way.l, Container.Balance.r, Loc (L.max/3*2,0), Loc (L.max,1));
 
-    auto a  = world.widget (c1, Len (1,1));
-    auto b  = world.widget (c1, Len (1,1));
-    auto c  = world.widget (c2, Len (1,1));
-    auto d  = world.widget (c3, Len (1,1));
-    auto e  = world.widget (c3, Len (1,1));
+    auto a  = world ~= new Widget (c1, Len (1,1));
+    auto b  = world ~= new Widget (c1, Len (1,1));
+    auto c  = world ~= new Widget (c2, Len (1,1));
+    auto d  = world ~= new Widget (c3, Len (1,1));
+    auto e  = world ~= new Widget (c3, Len (1,1));
+
+    auto
+    events () {
+        return [World.Event ()];
+    }
 
     // loop
-    foreach (event; events)
-        world.see (&event);
-}
-
-auto
-events () {
-    return [World.Event ()];
+    foreach (ref event; events)
+        foreach (_widget; world.widgets (Grid.Loc (0,0))) {
+            // _widget;
+        }
 }
 
 struct
@@ -48,20 +50,7 @@ World {
         return container;
     }
 
-    Widget*
-    widget (Container* container, Len fix_len) {
-        auto widget = new Widget (container,fix_len);
-        widgets ~= widget;
-        return widget;
-    }
-
-    Widget*
-    widget (Loc min_loc, Loc max_loc) {
-        auto widget = new Widget (min_loc, max_loc);
-        widgets ~= widget;
-        return widget;
-    }
-
+    /*
     auto
     see (World.Event* event) {
         // Grid able
@@ -95,6 +84,7 @@ World {
 
         return World.Event ();
     }
+    */
 
     void
     rasterize (Len,FILL_FN) (Len window_len, FILL_FN fill) {
@@ -161,15 +151,22 @@ World {
         }
     }
 
+    Widget*
+    opOpAssign (string op : "~") (Widget* b) {
+        widgets ~= b;
+        return b;
+    }
+
     struct
     Event {
-        Grid.Event      grid;
-        Container.Event container;
-        Widget.Event    widget;
+        Container* container;
+        Widget*    widget;
+        World*     world;
 
-        bool is_gridable;
-        bool is_containerable;
-        bool is_widgetable;
+        bool   is_gridable;
+        bool   is_containerable;
+        bool   is_widgetable;
+
 
         // if (WidgetEvent) ...
         //bool opCast (T) () if (is (T == bool)) { return (widget !is null); }
@@ -180,7 +177,7 @@ struct
 Container {
     mixin ListAble!(typeof(this)) list;
     mixin WalkAble!(typeof(this)) walk;
-    mixin GridAble!(typeof(this)) grid;
+    Grid.Widget grid;
     mixin ContAble!(typeof(this)) cont;
 
     version (NEVER) {
@@ -202,10 +199,10 @@ Container {
 
 
     this (Way way, Balance balance, Loc min_loc, Loc max_loc) {
-        this.way     = way;
-        this.balance = balance;
-        this.min_loc = min_loc;
-        this.max_loc = max_loc;
+        this.way          = way;
+        this.balance      = balance;
+        this.grid.min_loc = min_loc;
+        this.grid.max_loc = max_loc;
     }
 
     enum
@@ -219,14 +216,6 @@ Container {
         r,
         c,
         l,
-    }
-
-    struct
-    Event {
-        Container* container;
-
-        // if (WidgetEvent) ...
-        bool opCast (T) () if (is (T == bool)) { return (container !is null); }
     }
 }
 
@@ -269,10 +258,9 @@ struct
 Widget {
     mixin ListAble!(typeof(this)) list;
     mixin WalkAble!(typeof(this)) walk;
-    mixin GridAble!(typeof(this)) grid;
+    Grid.Widget grid;
     mixin ContAble!(typeof(this)) cont;
     //mixin EvntAble!(typeof(this)) evnt;
-    mixin CustAble!(typeof(this)) cust;
     
     version (NEVER) {
     // DList
@@ -289,21 +277,13 @@ Widget {
     }
 
     this (Loc min_loc, Loc max_loc) {
-        this.min_loc = min_loc;
-        this.max_loc = max_loc;
+        this.grid.min_loc = min_loc;
+        this.grid.max_loc = max_loc;
     }
 
     this (Container* container, Len fix_len) {
         this.container = container;
         this.fix_len   = fix_len;        
-    }
-
-    struct
-    Event {
-        Widget* widget;
-
-        // if (WidgetEvent) ...
-        bool opCast (T) () if (is (T == bool)) { return (widget !is null); }
     }
 }
 
@@ -349,31 +329,12 @@ WalkAble (T) {
     }
 }
 
-mixin template
-GridAble (T) {
-    import loc;
-    
-    // Grid                // Сеточные координаты
-    Loc        min_loc;    // начало, включая границу
-    Loc        max_loc;    // конец, включая границу    
-
-    bool
-    match (Loc loc) {
-        return Grid.between (loc, min_loc,max_loc);
-    }
-}
 
 mixin template
 ContAble (T) {
     // Container           // Контейнерные кооринаты
     Container* container;  // id контейнера = указатель
     Len        fix_len;    // fixed len, in gris-coord, 0 = auto    
-}
-
-mixin template
-CustAble (T) {
-    // custom fields
-    void* callback;
 }
 
 struct
@@ -389,7 +350,7 @@ Widgets {  // DList
         a.r = b;
     }
 
-    void
+    Widget*
     opOpAssign (string op : "~") (Widget* b) {
         if (this.l is null)
             this.l = b;
@@ -397,25 +358,22 @@ Widgets {  // DList
             link (this.r, b);
 
         this.r = b;
+
+        return b;
     }
 
+    auto
+    opCall () {
+        return l.walk.walk (this.l);
+    }
+    auto
+    opCall (Grid.Loc loc) {
+        return l.walk.walk (this.l);
+    }
     auto
     walk () {
         return l.walk.walk (this.l);
     }
-}
-
-struct
-Visitor {
-    // Event
-    World.Event* event;
-    // 
-    World*     current_world;
-}
-
-struct 
-PointerEvent {
-    //
 }
 
 struct
@@ -434,9 +392,18 @@ Grid {  // SIMD
         return false;
     }
 
-    struct 
-    Event {
-        Loc loc;
+    struct
+    Widget {
+        import loc;
+        
+        // Grid                // Сеточные координаты
+        Loc        min_loc;    // начало, включая границу
+        Loc        max_loc;    // конец, включая границу    
+
+        bool
+        match (Loc loc) {
+            return Grid.between (loc, min_loc,max_loc);
+        }
     }
 }
 
