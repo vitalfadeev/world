@@ -11,13 +11,6 @@ World {
     // Worlds
     World*     next;
 
-    Container*
-    container (Container.Way way, Container.Balance balance, Loc min_loc, Loc max_loc) {
-        auto container = new Container (way,balance,min_loc,max_loc);
-        containers ~= container;
-        return container;
-    }
-
     /*
     auto
     see (World.Event* event) {
@@ -183,7 +176,7 @@ Containers {  // DList
     Container* l;
     Container* r;
 
-    void
+    Container*
     opOpAssign (string op : "~") (Container* b) {
         if (this.l is null)
             this.l = b;
@@ -191,6 +184,8 @@ Containers {  // DList
             link (this.r, b);
 
         this.r = b;
+
+        return b;
     }
 
     auto
