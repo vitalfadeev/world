@@ -427,7 +427,10 @@ Grid {  // SIMD
 
     static
     auto
-    between (Loc loc, Loc min_loc, Loc max_loc) {
+    between (Loc loc, Loc min_loc, Loc max_loc) {  // SIMD
+        static foreach (i; 0..Loc.N)
+        if (min_loc.xy[i] >= loc.xy[i] && max_loc.xy[i] <= loc.xy[i])
+            return true;
         return false;
     }
 
